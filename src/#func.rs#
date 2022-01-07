@@ -1,0 +1,70 @@
+#![allow(dead_code, unused, deprecated)]
+
+use std::env;
+use std::fs;
+use std::io::*;
+use std::path::Path;
+use crate::args;
+
+const FILENAME: &'static str = ".habits";
+
+// check if habit name already exist in file
+pub fn check_name(name: String) -> anyhow::Result<()> {
+    let file = fs::File::open(FILENAME)?;
+    for line in BufReader::new(file).lines() {
+        if line.unwrap().split_whitespace().next().unwrap_or("") == name {
+          return Err(anyhow::Error::new(Error::new(std::io::ErrorKind::InvalidInput, "Habit name already exists")))
+        } 
+    }
+    Ok(())
+}
+
+pub fn add(args: args::Arguments) -> anyhow::Result<()> {
+    env::set_current_dir(env::home_dir().unwrap());
+    if Path::new(FILENAME).exists() == true {
+        check_name(args.clone().name).unwrap();
+    }
+    let mut file = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .write(true)
+        .read(true)
+        .open(FILENAME)
+        .unwrap();
+
+    write!(&mut file, "{} {}\n", args.name, args.count);
+    Ok(())
+}
+
+pub fn remove(args: args::Arguments) -> anyhow::Result<()> {
+    todo!()
+}
+
+pub fn edit(args: args::Arguments) -> anyhow::Result<()> {
+    todo!()
+}
+
+pub fn checkin(args: args::Arguments) -> anyhow::Result<()> {
+    env::set_current_dir(env::home_dir().unwrap());
+    if !Path::new(FILENAME).exists() { 
+        return Ok(());
+    }
+
+    let mut file = fs::File::open(FILENAME)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content);
+
+    Ok(())
+}
+
+pub fn list() -> anyhow::Result<()> {
+    env::set_current_dir(env::home_dir().unwrap());
+    if !Path::new(FILENAME).exists() { 
+        return Ok(());
+    }
+    let file = fs::File::open(FILENAME).expect("Could not open file");
+    for line in BufReader::new(file).lines() {
+        println!("Habit Name: {}", line.unwrap());
+    }
+    Ok(())
+}
