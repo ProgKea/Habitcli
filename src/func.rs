@@ -1,5 +1,4 @@
 #![allow(unused, deprecated)]
-// TODO: Prevent users from entering habits with spaces (use underscores instead)
 
 use crate::args;
 use std::env;
@@ -32,6 +31,13 @@ pub fn add(args: args::Arguments) -> anyhow::Result<()> {
             )));
         }
     }
+    if args.name.matches(" ").count() > 1 {
+        return Err(anyhow::Error::new(Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Habit name can't contain whitespace try using '_' instead",
+        )));
+    }
+
     let mut file = fs::OpenOptions::new()
         .create(true)
         .append(true)
